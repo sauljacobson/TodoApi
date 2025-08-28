@@ -34,9 +34,9 @@ namespace TodoApi.Controllers
             var todoUserId = todoUser.Id;
 
             var todoItems = _context.TodoItems
-                                .Where(item => item.UserId == todoUserId)
-                                .ToList();
-
+                .FromSqlInterpolated($"CALL GetTodosByUserId({todoUserId});")
+                .ToList();
+            
             return Ok(todoItems);
         }
 
@@ -73,40 +73,20 @@ namespace TodoApi.Controllers
                 UserId = todoUserId
             };
 
-            _context.TodoItems.Add(todoItem);
-            _context.SaveChanges();
+            var result = await _context.Database
+                .ExecuteSqlInterpolatedAsync($"CALL AddNewTodo({dto.Title}, {todoUserId})");
 
-            return Ok(todoItem);
+            if (result == 1)
+                return Ok(todoItem); 
+            
+            return BadRequest("Insert failed");
         }
 
-        [HttpPut("{id}")] 
+        [HttpPut("{id}")]
         [Authorize]
         public async Task<IActionResult> UpdateTodoItem(int id, UpdateTodoItemDto dto)
         {
-            var username = User.GetUsername(); 
-            var todoUser = await _userManager.FindByNameAsync(username);
-            var todoUserId = todoUser.Id;
-
-            var todoItem = _context.TodoItems.Find(id); 
-
-            if (todoItem == null || todoItem.UserId != todoUserId)
-            {
-                return NotFound();
-            }
-
-            todoItem.Title = dto.Title;
-            todoItem.IsDone = dto.IsDone; 
-
-            _context.SaveChanges();
-
-            return NoContent();
-        }
-
-        [HttpDelete("{id}")]
-        [Authorize]
-        public async Task<IActionResult> DeleteTodoItem(int id)
-        {
-            var username = User.GetUsername(); 
+            var username = User.GetUsername();
             var todoUser = await _userManager.FindByNameAsync(username);
             var todoUserId = todoUser.Id;
 
@@ -117,10 +97,37 @@ namespace TodoApi.Controllers
                 return NotFound();
             }
 
-            _context.TodoItems.Remove(todoItem);
-            _context.SaveChanges();
+            var rowsAffected = await _context.Database
+                .ExecuteSqlInterpolatedAsync($"CALL UpdateTodo({id}, {dto.Title}, {dto.IsDone}, {todoUserId});");
 
-            return NoContent();
+            if (rowsAffected == 1 || rowsAffected == 0)
+                return NoContent();
+
+            return BadRequest("Update Failed!");
+        }
+
+        [HttpDelete("{id}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteTodoItem(int id)
+        {
+            var username = User.GetUsername();
+            var todoUser = await _userManager.FindByNameAsync(username);
+            var todoUserId = todoUser.Id;
+
+            var todoItem = _context.TodoItems.Find(id);
+
+            if (todoItem == null || todoItem.UserId != todoUserId)
+            {
+                return NotFound();
+            }
+
+            var rowsAffected = await _context.Database
+                .ExecuteSqlInterpolatedAsync($"CALL DeleteTodo({id}, {todoUserId});");
+
+            if (rowsAffected == 1)
+                return Ok("Todo deleted");
+
+            return BadRequest("Deletion failed"); 
         }
     }
 }
