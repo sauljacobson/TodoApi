@@ -27,7 +27,7 @@ in order to access the TodoItem endpoints.
 ## Todo 
 Represents the `Todo` items of a `User`. The `Todo` endpoints are only accessible 
 if a `User` is logged-in, which in this case, the `User` supplies a valid token to 
-grant authorization.  
+grant authorization. 
 
 | __Method__ |   __Endpoint__  | __Function__ |
 | :--------  | :-----------    | :----------- |
@@ -37,10 +37,14 @@ grant authorization.
 | `PUT`      | `api/Todo/{id}` | Edits a specific `Todo` | 
 | `DELETE`   | `api/Todo/{id}` | Deletes a specific `Todo` | 
 
+
 ## User 
 A `User` has a collection of `Todos`. In order to manage `Todos`, a 
 `User` must register and login through the enpoints. The `User` model 
-is a representation of the `IdentityUser` class.
+inherits from `IdentityUser` class. A __token__ can be acquired by successfully 
+running the `api/User/login` endpoint and then passing it into the input field 
+under the Authorization button, which can be found on the top-right of the 
+SwaggerUI page.
 
 | __Method__ |   __Endpoint__  | __Function__ |
 | :--------  | :-----------    | :----------- |
