@@ -35,8 +35,14 @@ namespace TodoApi.Controllers
 
             var todoItems = _context.TodoItems
                 .FromSqlInterpolated($"CALL GetTodosByUserId({todoUserId});")
-                .ToList();
-            
+                .ToList()
+                .Select(todo => new SummaryTodoDto
+                {
+                    Id = todo.Id,
+                    Title = todo.Title,
+                    IsDone = todo.IsDone
+                });
+
             return Ok(todoItems);
         }
 
