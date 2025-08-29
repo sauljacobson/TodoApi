@@ -34,8 +34,14 @@ namespace TodoApi.Controllers
             var todoUserId = todoUser.Id;
 
             var todoItems = _context.TodoItems
-                                .Where(item => item.UserId == todoUserId)
-                                .ToList();
+                .Where(item => item.UserId == todoUserId)
+                .ToList()
+                .Select(todo => new SummaryTodoDto
+                {
+                    Id = todo.Id,
+                    Title = todo.Title,
+                    IsDone = todo.IsDone
+                });
 
             return Ok(todoItems);
         }
